@@ -1,0 +1,18 @@
+//register request
+{"registration":"alice"}
+//register response
+{"registration":true|false}
+//register broadcast (sent to all when someone registers)
+{"timestamp":"2022-01-08 12:00:00", "from":"server", "registration":"alice", "message": "alice registered","mode":"broadcast"}
+//broadcast message request
+{"message": "hello"}
+//broadcast message response
+{"timestamp":"2022-01-08 12:00:00", "from":"alice", "message": "user_name registered", "mode":"broadcast"}
+//unicast message request
+{"message":"hello","to":"bob"}
+//unicast message response
+{"timestamp":"2022-01-08 12:00:00", "from":"alice", "message": "user_name registered", "mode":"unicast"}
+//list command
+{"command":"list"}
+//list response
+{"command":"list","result":["alice","bob"]}
