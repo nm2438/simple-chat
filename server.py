@@ -6,10 +6,10 @@ import json
 import datetime
 
 clients=[] #list of {'name':'jim','socket':s}
-def connection_thread(conn, addr):
+def connection_thread(client, addr):
     #registration
     try:
-        msg=conn.recv(1024)
+        msg=client.recv(1024)
         decoded_msg=msg.decode('utf-8').strip()
         #first message is registration name
         print(f'received raw reg msg {decoded_msg}')
@@ -18,11 +18,11 @@ def connection_thread(conn, addr):
         #was the message structured correctly
         if 'registration' in reg.keys():
             client_name=reg['registration']
-            new_client={'name':client_name, 'socket':conn}
+            new_client={'name':client_name, 'socket':client}
             clients.append(new_client)
             #send back success
             print(f'successful registration {addr[0]}:{client_name}')
-            conn.sendall('{"registration":true}'.encode('utf-8'))
+            client.sendall('{"registration":true}'.encode('utf-8'))
             reg_bcast={}
             reg_bcast['timestamp']=datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             reg_bcast['from']="server"
@@ -31,23 +31,23 @@ def connection_thread(conn, addr):
             broadcast(reg_bcast,new_client)
         else:
             #send back fail
-            conn.sendall('{"registration":false}'.encode('utf-8'))
+            client.sendall('{"registration":false}'.encode('utf-8'))
     except:
-        print('FAIL registration')
+        print('FAIL registration' )
     #message listen loop
     while True:
-        msg = conn.recv(1024)
-        decoded_msg = msg.decode('utf-8').strip()
+        msg=client.recv(1024)
+        decoded_msg=msg.decode('utf-8').strip()
         #print(f'raw chat: {decoded_msg}')
         if len(decoded_msg) > 0:
-            chat = json.loads(decoded_msg) #{"message":"hello"}
+            chat=json.loads(decoded_msg) #{"message":"hello"}
             if 'command' in chat.keys():
                 print(f'received command from {client_name}')
-                command_processor(chat, conn)
+                command_processor(chat, client)
             else: #consider it a message
-                chat['timestamp'] = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-                chat['from'] = client_name
-                if 'mode' in chat.keys() and chat['mode']=='unicast':
+                chat['timestamp']=datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+                chat['from']=client_name
+                if 'to' in chat.keys():
                     chat['mode']='unicast'
                     print(f'sending DM to {chat["to"]}')
                     for client in clients:
@@ -55,7 +55,7 @@ def connection_thread(conn, addr):
                             client['socket'].send(json.dumps(chat).encode('utf-8'))
                 else:
                     chat['mode']='broadcast'
-                    broadcast(chat, conn)
+                    broadcast(chat,client)
     
         
         
